@@ -187,6 +187,6 @@ def test_app_routes_and_health() -> None:
     review_response = client.post(
         "/reviews/TX1001",
         data={"reviewer_outcome": "Confirm risky"},
-        follow_redirects=False,
     )
-    assert review_response.status_code == 303
+    assert review_response.status_code == 200
+    assert "Confirm risky" in review_response.text

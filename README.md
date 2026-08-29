@@ -40,6 +40,7 @@ The MVP is intentionally defense-only and product-focused. It is designed to dem
 - [ml_pipeline](ml_pipeline): training, feature, evaluation, and inference logic
 - [notebooks](notebooks): experiment notebook(s)
 - [templates](templates): UI pages
+- [docs](docs): product and model documentation
 - [tests](tests): app-level smoke tests
 
 ## Run the app
@@ -85,6 +86,12 @@ For a focused app and end-to-end module validation pass:
 uv run pytest tests/test_app.py tests/test_full_application.py -q
 ```
 
+## Model selection and rationale
+
+The active model is the boosted tree pipeline saved to the MLflow run artifacts and loaded from the runtime artifact bundle. It is preferred over the logistic baseline because it produces better PR-AUC and lower expected review cost while handling non-linear transaction risk patterns more effectively.
+
+See [docs/model.md](docs/model.md) for the full model rationale and artifact provenance.
+
 ## Notes
 
-This project is a working MVP oriented toward the PRD, with an emphasis on a defensible payment-risk workflow and a review-driven merchant experience. The application includes a logging layer, SQLite-backed repository persistence, and module-level validation coverage for the core flow.
+This project is a working MVP oriented toward the PRD, with an emphasis on a defensible payment-risk workflow and a review-driven merchant experience. The application includes a logging layer, SQLite-backed repository persistence, a CSV validation workflow in the settings UI, and module-level validation coverage for the core flow.

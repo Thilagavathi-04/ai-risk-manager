@@ -3,21 +3,24 @@
 {% block title %}ai-risk-manager | {{ page_title }}{% endblock %}
 
 {% block content %}
-  <section>
-    <h2>{{ page_title }}</h2>
-    <div>
+  <section class="panel">
+    <div class="page-head">
+      <h2>{{ page_title }}</h2>
+      <span class="pill">Threshold diagnostics</span>
+    </div>
+    <div class="stat-grid">
       {% for metric in metrics %}
-        <article>
+        <article class="stat-card">
           <strong>{{ metric.value }}</strong>
-          <div>{{ metric.label }}</div>
+          <span>{{ metric.label }}</span>
         </article>
       {% endfor %}
     </div>
   </section>
 
-  <section>
+  <section class="panel">
     <h3>Threshold / cost</h3>
-    <p>Selected threshold: {{ selected_threshold }}</p>
+    <p>Selected threshold: <strong>{{ selected_threshold }}</strong></p>
     <table>
       <thead>
         <tr>
@@ -36,7 +39,7 @@
     </table>
   </section>
 
-  <section>
+  <section class="panel">
     <h3>Confusion matrix</h3>
     <table>
       <thead>
@@ -61,7 +64,7 @@
     </table>
   </section>
 
-  <section>
+  <section class="panel">
     <h3>Baseline vs final model</h3>
     <table>
       <thead>

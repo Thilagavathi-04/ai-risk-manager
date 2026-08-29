@@ -3,8 +3,11 @@
 {% block title %}ai-risk-manager | {{ page_title }}{% endblock %}
 
 {% block content %}
-  <section>
-    <h2>{{ page_title }}</h2>
+  <section class="panel">
+    <div class="page-head">
+      <h2>{{ page_title }}</h2>
+      <span class="pill">Queue overview</span>
+    </div>
     <table>
       <thead>
         <tr>
@@ -26,9 +29,14 @@
             <td>{{ transaction.amount }}</td>
             <td>{{ transaction.merchant }}</td>
             <td>{{ transaction.category }}</td>
-            <td>{{ transaction.risk_score }} / {{ transaction.risk_level }}</td>
+            <td>
+              <strong>{{ transaction.risk_score }}</strong> /
+              <span class="status-badge {% if transaction.risk_level == 'HIGH' %}risk-high{% elif transaction.risk_level == 'MEDIUM' %}risk-medium{% else %}risk-low{% endif %}">
+                {{ transaction.risk_level }}
+              </span>
+            </td>
             <td>{{ transaction.recommended_action }}</td>
-            <td>{{ transaction.review_status }}</td>
+            <td><span class="status-badge">{{ transaction.review_status }}</span></td>
           </tr>
         {% endfor %}
       </tbody>

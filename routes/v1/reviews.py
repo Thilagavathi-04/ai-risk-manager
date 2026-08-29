@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse
-from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from db.repositories import app_repository
@@ -24,7 +23,13 @@ async def list_reviews(request: Request) -> HTMLResponse:
 
 
 @router.post("/{transaction_id}")
-async def record_review(transaction_id: str, reviewer_outcome: str = Form(...)) -> RedirectResponse:
+async def record_review(request: Request, transaction_id: str, reviewer_outcome: str = Form(...)) -> HTMLResponse:
     app_repository.record_review(transaction_id, reviewer_outcome)
     logger.info("Recorded review for %s with outcome %s", transaction_id, reviewer_outcome)
-    return RedirectResponse(url=f"/transactions/{transaction_id}", status_code=303)
+
+    context = {
+        "request": request,
+        "page_title": "Transaction Detail",
+        "transaction": app_repository.get_transaction(transaction_id),
+    }
+    return templates.TemplateResponse(request=request, name="pages/transaction_detail.html", context=context)

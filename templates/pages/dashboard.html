@@ -3,20 +3,25 @@
 {% block title %}ai-risk-manager | {{ page_title }}{% endblock %}
 
 {% block content %}
-  <section>
-    <h2>{{ page_title }}</h2>
-    <div>
+  <section class="panel">
+    <div class="page-head">
+      <h2>{{ page_title }}</h2>
+      <span class="pill">Live merchant risk overview</span>
+    </div>
+    <div class="stat-grid">
       {% for stat in stats %}
-        <article>
+        <article class="stat-card">
           <strong>{{ stat.value }}</strong>
-          <div>{{ stat.label }}</div>
+          <span>{{ stat.label }}</span>
         </article>
       {% endfor %}
     </div>
   </section>
 
-  <section>
-    <h3>Recent High-Risk Transactions</h3>
+  <section class="panel">
+    <div class="page-head">
+      <h2>Recent High-Risk Transactions</h2>
+    </div>
     <table>
       <thead>
         <tr>
@@ -30,9 +35,13 @@
       <tbody>
         {% for transaction in recent_transactions %}
           <tr>
-            <td>{{ transaction.id }}</td>
+            <td><a href="/transactions/{{ transaction.id }}">{{ transaction.id }}</a></td>
             <td>{{ transaction.amount }}</td>
-            <td>{{ transaction.risk_level }}</td>
+            <td>
+              <span class="status-badge {% if transaction.risk_level == 'HIGH' %}risk-high{% elif transaction.risk_level == 'MEDIUM' %}risk-medium{% else %}risk-low{% endif %}">
+                {{ transaction.risk_level }}
+              </span>
+            </td>
             <td>{{ transaction.risk_score }}</td>
             <td>{{ transaction.action }}</td>
           </tr>

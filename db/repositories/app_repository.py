@@ -2,6 +2,7 @@ import sqlite3
 from pathlib import Path
 
 from db.repositories.dashboard_repository import InMemoryDashboardRepository
+from ml_pipeline.artifacts import load_active_model_context
 from models.audit import AuditEntry
 from models.evaluation import EvaluationMetric, ModelComparisonRow, ThresholdCostPoint
 from models.review import ReviewItem
@@ -266,14 +267,24 @@ class SQLiteAppRepository:
         ]
 
     def settings(self) -> list[SettingsSection]:
+        model_context = load_active_model_context()
         return [
             SettingsSection(
                 title="Model",
-                items=[SettingsItem(label="Version", value="ai-risk-manager-v1")],
+                items=[
+                    SettingsItem(label="Version", value=model_context["model_version"]),
+                    SettingsItem(label="Active model", value=model_context["model_name"]),
+                    SettingsItem(label="MLflow run", value=model_context["run_name"]),
+                    SettingsItem(label="Run ID", value=model_context["run_id"]),
+                    SettingsItem(label="Scikit-learn", value=model_context["sklearn_version"]),
+                ],
             ),
             SettingsSection(
                 title="Decision Policy",
-                items=[SettingsItem(label="Review threshold", value="0.72")],
+                items=[
+                    SettingsItem(label="Review threshold", value="0.72"),
+                    SettingsItem(label="Why this model", value=model_context["training_summary"]),
+                ],
             ),
             SettingsSection(
                 title="Cost Assumptions",

@@ -3,8 +3,11 @@
 {% block title %}ai-risk-manager | {{ page_title }}{% endblock %}
 
 {% block content %}
-  <section>
-    <h2>{{ page_title }}</h2>
+  <section class="panel">
+    <div class="page-head">
+      <h2>{{ page_title }}</h2>
+      <span class="pill">Review queue</span>
+    </div>
     <table>
       <thead>
         <tr>
@@ -22,7 +25,7 @@
             <td>{{ review.score }}</td>
             <td>{{ review.amount }}</td>
             <td>{{ review.recommendation }}</td>
-            <td>{{ review.status }}</td>
+            <td><span class="status-badge">{{ review.status }}</span></td>
           </tr>
         {% endfor %}
       </tbody>

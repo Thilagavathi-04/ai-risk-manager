@@ -3,16 +3,43 @@
 {% block title %}ai-risk-manager | {{ page_title }}{% endblock %}
 
 {% block content %}
-  <section>
-    <h2>Transaction {{ transaction.id }}</h2>
-    <p>{{ transaction.amount }} | {{ transaction.timestamp }} | Merchant {{ transaction.merchant }}</p>
-    <p><strong>{{ transaction.risk_level }}</strong> - {{ transaction.risk_score }}</p>
-    <p>Recommended action: {{ transaction.recommended_action }}</p>
-    <p>Review status: {{ transaction.review_status }}</p>
+  <section class="panel">
+    <div class="page-head">
+      <h2>Transaction {{ transaction.id }}</h2>
+      <span class="status-badge {% if transaction.risk_level == 'HIGH' %}risk-high{% elif transaction.risk_level == 'MEDIUM' %}risk-medium{% else %}risk-low{% endif %}">
+        {{ transaction.risk_level }}
+      </span>
+    </div>
+
+    <div class="detail-grid">
+      <div>
+        <p>{{ transaction.amount }} | {{ transaction.timestamp }} | Merchant {{ transaction.merchant }}</p>
+        <p><strong>Risk score:</strong> {{ transaction.risk_score }}</p>
+        <p><strong>Recommended action:</strong> {{ transaction.recommended_action }}</p>
+        <p>Review status: {{ transaction.review_status }}</p>
+      </div>
+
+      <div class="meta-list">
+        <div class="meta-box">
+          <small>Merchant</small>
+          <strong>{{ transaction.merchant }}</strong>
+        </div>
+        <div class="meta-box">
+          <small>Amount</small>
+          <strong>{{ transaction.amount }}</strong>
+        </div>
+        <div class="meta-box">
+          <small>Category</small>
+          <strong>{{ transaction.category }}</strong>
+        </div>
+      </div>
+    </div>
   </section>
 
-  <section>
-    <h3>Why flagged</h3>
+  <section class="panel list-card">
+    <div class="page-head">
+      <h2>Why flagged</h2>
+    </div>
     <ol>
       {% for signal in transaction.signals %}
         <li>{{ signal }}</li>
@@ -20,7 +47,7 @@
     </ol>
   </section>
 
-  <section>
+  <section class="panel">
     <h3>Historical context</h3>
     <dl>
       {% for label, value in transaction.historical_context %}
@@ -30,12 +57,14 @@
     </dl>
   </section>
 
-  <section>
+  <section class="panel">
     <h3>Verification workflow</h3>
-    <form method="post" action="/reviews/{{ transaction.id }}">
-      <button name="reviewer_outcome" value="Legitimate" type="submit">Mark legitimate</button>
-      <button name="reviewer_outcome" value="Confirm risky" type="submit">Confirm risky</button>
-      <button name="reviewer_outcome" value="Need information" type="submit">Need information</button>
-    </form>
+    <div class="btn-row">
+      <form method="post" action="/reviews/{{ transaction.id }}">
+        <button class="btn success" name="reviewer_outcome" value="Legitimate" type="submit">Mark legitimate</button>
+        <button class="btn" name="reviewer_outcome" value="Confirm risky" type="submit">Confirm risky</button>
+        <button class="btn warning" name="reviewer_outcome" value="Need information" type="submit">Need information</button>
+      </form>
+    </div>
   </section>
 {% endblock %}
