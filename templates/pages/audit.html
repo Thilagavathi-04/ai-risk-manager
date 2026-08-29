@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}ai-risk-manager | {{ page_title }}{% endblock %}
+
+{% block content %}
+  <section>
+    <h2>{{ page_title }}</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Transaction</th>
+          <th>Model Version</th>
+          <th>Score</th>
+          <th>Threshold</th>
+          <th>Decision</th>
+          <th>Reviewer Outcome</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in entries %}
+          <tr>
+            <td>{{ entry.timestamp }}</td>
+            <td>{{ entry.transaction_id }}</td>
+            <td>{{ entry.model_version }}</td>
+            <td>{{ entry.score }}</td>
+            <td>{{ entry.threshold }}</td>
+            <td>{{ entry.decision }}</td>
+            <td>{{ entry.reviewer_outcome }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}

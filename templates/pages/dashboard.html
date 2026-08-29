@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}ai-risk-manager | {{ page_title }}{% endblock %}
+
+{% block content %}
+  <section>
+    <h2>{{ page_title }}</h2>
+    <div>
+      {% for stat in stats %}
+        <article>
+          <strong>{{ stat.value }}</strong>
+          <div>{{ stat.label }}</div>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section>
+    <h3>Recent High-Risk Transactions</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Amount</th>
+          <th>Risk</th>
+          <th>Score</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for transaction in recent_transactions %}
+          <tr>
+            <td>{{ transaction.id }}</td>
+            <td>{{ transaction.amount }}</td>
+            <td>{{ transaction.risk_level }}</td>
+            <td>{{ transaction.risk_score }}</td>
+            <td>{{ transaction.action }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}

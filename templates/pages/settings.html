@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}ai-risk-manager | {{ page_title }}{% endblock %}
+
+{% block content %}
+  <section>
+    <h2>{{ page_title }}</h2>
+    {% for section in sections %}
+      <article>
+        <h3>{{ section.title }}</h3>
+        <dl>
+          {% for item in section.items %}
+            <dt>{{ item.label }}</dt>
+            <dd>{{ item.value }}</dd>
+          {% endfor %}
+        </dl>
+      </article>
+    {% endfor %}
+  </section>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}ai-risk-manager | {{ page_title }}{% endblock %}
+
+{% block content %}
+  <section>
+    <h2>{{ page_title }}</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Timestamp</th>
+          <th>Amount</th>
+          <th>Merchant</th>
+          <th>Category</th>
+          <th>Risk</th>
+          <th>Action</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for transaction in transactions %}
+          <tr>
+            <td><a href="/transactions/{{ transaction.id }}">{{ transaction.id }}</a></td>
+            <td>{{ transaction.timestamp }}</td>
+            <td>{{ transaction.amount }}</td>
+            <td>{{ transaction.merchant }}</td>
+            <td>{{ transaction.category }}</td>
+            <td>{{ transaction.risk_score }} / {{ transaction.risk_level }}</td>
+            <td>{{ transaction.recommended_action }}</td>
+            <td>{{ transaction.review_status }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}
