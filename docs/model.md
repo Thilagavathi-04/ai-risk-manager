@@ -4,6 +4,8 @@
 
 The live production decision model for the AI Risk Manager demo is the boosted tree pipeline stored as `risk_model.joblib` in the application artifact bundle. The model artifact is produced by the training pipeline in `ml_pipeline/train.py`, and the runtime app reads that bundle via `ml_pipeline/artifacts.py`.
 
+For comprehensive technical specifications, hyperparameter tables, and pipeline diagrams, see [MODEL_DETAILS.md](file:///Thilaga/Projects/ai-risk-manager/MODEL_DETAILS.md).
+
 ## Why this model is selected
 
 The app uses the boosted tree over the logistic baseline because the boosted tree delivers materially better ranking and decision quality on the PaySim1 fraud task. In the current recorded evaluation:

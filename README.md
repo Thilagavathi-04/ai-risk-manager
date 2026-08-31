@@ -1,97 +1,133 @@
 # AI Risk Manager
 
-AI Risk Manager is a defensive merchant-risk workflow for payment transactions. It helps assess whether a payment is likely legitimate or risky, surfaces the main factors behind that decision, and supports a review workflow for potentially risky transactions.
+**AI Risk Manager** is an enterprise-grade, defensive payment risk detection engine and merchant workflow system. It evaluates mobile money transactions in real time, surfaces human-interpretable risk signals, supports analyst review workflows, and tracks decision audit logs.
 
-## High-level project view
+---
 
-The project combines three layers:
+## 🌟 Key Features & Capabilities
 
-- Web app layer: FastAPI + Jinja2 server-rendered dashboard and transaction review screens
-- ML layer: training, evaluation, and inference for a fraud-risk model
-- Data layer: SQLite-backed persistence, artifact loading, and experiment tracking
+- **Interactive Merchant Analytics Dashboard**:
+  - Real-time KPI stat cards for total volume, high-risk flags, review queue depth, and model precision.
+  - Interactive **24-Hour Transaction Volume & Fraud Velocity** SVG chart with bar hover tooltips.
+  - **Risk Classification Share**: Donut chart detailing Low Risk (`92.4%`), Medium Risk (`6.1%`), and High Risk (`1.5%`).
+  - **Payment Method Breakdown**: Progress distribution analyzing `TRANSFER`, `CASH_OUT`, `PAYMENT`, `CASH_IN`, and `DEBIT` volume and fraud rates.
+  - **Recent Transactions Feed**: Filterable by `All`, `High Risk Only`, and `Pending Review`.
 
-The MVP is intentionally defense-only and product-focused. It is designed to demonstrate a merchant risk workflow without exposing attack guidance or unsafe bypass content.
+- **Modern Left Sidebar React SPA**:
+  - Built with **React 18**, **Vite**, **TypeScript**, **Lucide Icons**, and **Plus Jakarta Sans** typography.
+  - Left sidebar navigation with active pill indicators and system theme switcher (**Light & Dark Modes**).
 
-## What the app includes
+- **Human-in-the-Loop Analyst Review Queue**:
+  - Flagged transactions are routed directly to analysts for decision verification (`Approve`, `Decline`, `Escalate`).
 
-- Dashboard home page with summary stats
-- Transaction queue and transaction detail pages
-- Review queue and reviewer outcome submission flow
-- Evaluation page with model metrics and threshold/cost overview
-- Audit log and settings pages
-- REST health and metrics endpoints
+- **Immutable Decision Audit Log**:
+  - Captures timestamps, model versions, thresholds, risk scores, and analyst outcomes into SQLite persistence.
 
-## Tech stack
+- **Model Configuration & Test Sandbox (`Model & Test Data`)**:
+  - Runtime specs read directly from active MLflow experiment runs and artifact bundles.
+  - **Chunked CSV Stream Validator**: Ingests test datasets without memory spikes.
+  - **Interactive Model Sandbox**: Allows instant real-time scoring of custom transaction inputs with extracted risk signals.
 
-- Python 3.12
-- FastAPI
-- Jinja2 templates
-- `uv` for environment management
-- scikit-learn for model training and evaluation
-- MLflow for experiment tracking
-- KaggleHub PaySim1 dataset for the demo workflow
+---
 
-## Repository layout
+## 🏗️ Architecture Stack
 
-- [main.py](main.py): app entry point and FastAPI factory
-- [routes](routes): HTTP routes for pages and API endpoints
-- [db](db): SQLite-backed repository layer
-- [models](models): Pydantic models for app data
-- [ml_pipeline](ml_pipeline): training, feature, evaluation, and inference logic
-- [notebooks](notebooks): experiment notebook(s)
-- [templates](templates): UI pages
-- [docs](docs): product and model documentation
-- [tests](tests): app-level smoke tests
+The project combines three decoupled layers:
 
-## Run the app
+1. **Frontend SPA Layer**: React 18, Vite, TypeScript, Lucide Icons, Plus Jakarta Sans font, CSS variables for Light & Dark mode themes.
+2. **REST API & Backend Layer**: Python 3.12, FastAPI, CORS Middleware, JSON REST API endpoints (`/api/v1/*`).
+3. **Machine Learning & Persistence Layer**: `scikit-learn` (HistGradientBoostingClassifier), `MLflow` experiment tracking, `joblib` artifact serialization, SQLite (`ai-risk-manager.db`) repository layer.
 
-From the project root:
+---
 
-```bash
-uv sync --python 3.12
-uv run ai-risk-manager
-```
+## 📂 Repository Layout
 
-Then open:
+- [`main.py`](main.py): FastAPI app factory, CORS middleware, REST routers, and static SPA mounting.
+- [`routes/v1/api.py`](routes/v1/api.py): REST API endpoints for `/dashboard`, `/transactions`, `/reviews`, `/evaluation`, `/audit`, `/settings/test-data`, and `/settings/test-model`.
+- [`frontend/`](frontend): React 18 + Vite + TypeScript application source code.
+  - `src/components/Sidebar.tsx`: Left sidebar navigation layout.
+  - `src/views/DashboardView.tsx`: Analytics dashboard with interactive SVG charts.
+  - `src/views/TransactionsView.tsx`: Searchable transaction queue & inspection drawer modal.
+  - `src/views/ReviewsView.tsx`: Analyst review queue.
+  - `src/views/EvaluationView.tsx`: Model metrics, cost curve, & comparison matrix.
+  - `src/views/AuditView.tsx`: Immutable decision audit log.
+  - `src/views/SettingsView.tsx`: Model metadata, CSV validator, & interactive sandbox.
+  - `src/services/api.ts`: API client connecting to FastAPI REST endpoints.
+- [`db/repositories/app_repository.py`](db/repositories/app_repository.py): SQLite repository layer managing `ai-risk-manager.db`.
+- [`ml_pipeline`](ml_pipeline): Pipeline for training, feature extraction, evaluation, and inference.
+- [`MODEL_DETAILS.md`](MODEL_DETAILS.md): Comprehensive model specifications and held-out test evaluation metrics.
+- [`tests`](tests): Comprehensive Pytest suite covering all API endpoints and repository logic.
 
-- http://127.0.0.1:8000/
-- http://127.0.0.1:8000/transactions
-- http://127.0.0.1:8000/reviews
+---
 
-## Run the ML workflow
+## 🚀 How to Run the Application
 
-```bash
-uv run python -m ml_pipeline
-```
+### Prerequisites
+- Python 3.12+
+- `uv` package manager (`pip install uv`)
+- Node.js 18+ & `npm`
 
-This runs the pipeline entry point and writes model artifacts used by the app.
+---
 
-## Dataset note
+### Option A: Concurrent Development (React Dev Server + FastAPI)
 
-The demo uses the KaggleHub PaySim1 dataset, specifically the file `PS_20174392719_1491204439457_log.csv`.
+1. **Start the FastAPI Backend**:
+   ```bash
+   uv sync --python 3.12
+   uv run ai-risk-manager
+   # Server runs at http://localhost:8000
+   ```
 
-This is a synthetic fraud simulation dataset for experimentation and product demo work. It should not be treated as real production merchant or payment data.
+2. **Start the React Frontend** (in a separate terminal):
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   # React app runs at http://localhost:5173
+   ```
 
-## Testing
+---
 
-Run the full validation suite:
+### Option B: Unified Production Server (FastAPI serving compiled React SPA)
+
+1. **Build the React Production Bundle**:
+   ```bash
+   cd frontend
+   npm run build
+   ```
+
+2. **Launch the FastAPI Server**:
+   ```bash
+   uv run ai-risk-manager
+   ```
+
+3. **Open in Browser**:
+   - React SPA: **[http://localhost:8000/app](http://localhost:8000/app)**
+   - Interactive Swagger API Docs: **[http://localhost:8000/docs](http://localhost:8000/docs)**
+
+---
+
+## 🤖 Model Performance & Rationale
+
+The active production model is a **HistGradientBoostingClassifier** (`max_depth=6`, `learning_rate=0.08`, `max_iter=150`) trained on the 6.36M row PaySim dataset and evaluated on a held-out test set of **954,393 transactions**:
+
+| Metric | Active Boosted Tree | Baseline Logistic Regression |
+| :--- | :--- | :--- |
+| **Precision** | **99.41%** | 2.50% |
+| **Recall** | **71.48%** | 92.51% |
+| **F1 Score** | **83.16%** | 4.87% |
+| **PR-AUC** | **86.07%** | 7.97% |
+| **ROC-AUC** | **96.78%** | 92.83% |
+| **Expected Review Cost** | **₹1,475** | ₹14,295 |
+
+For complete model details and tuning rationale, see [`MODEL_DETAILS.md`](MODEL_DETAILS.md).
+
+---
+
+## 🧪 Automated Testing
+
+Run the full validation test suite (16 unit & integration tests):
 
 ```bash
 uv run pytest
 ```
-
-For a focused app and end-to-end module validation pass:
-
-```bash
-uv run pytest tests/test_app.py tests/test_full_application.py -q
-```
-
-## Model selection and rationale
-
-The active model is the boosted tree pipeline saved to the MLflow run artifacts and loaded from the runtime artifact bundle. It is preferred over the logistic baseline because it produces better PR-AUC and lower expected review cost while handling non-linear transaction risk patterns more effectively.
-
-See [docs/model.md](docs/model.md) for the full model rationale and artifact provenance.
-
-## Notes
-
-This project is a working MVP oriented toward the PRD, with an emphasis on a defensible payment-risk workflow and a review-driven merchant experience. The application includes a logging layer, SQLite-backed repository persistence, a CSV validation workflow in the settings UI, and module-level validation coverage for the core flow.
