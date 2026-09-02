@@ -22,8 +22,8 @@ export const fetchHealth = async (): Promise<boolean> => {
   }
 };
 
-export const fetchDashboard = async (): Promise<DashboardSummary> => {
-  const res = await fetch(`${API_BASE}/dashboard`);
+export const fetchDashboard = async (timeframe: '24h' | '7d' | '30d' = '24h'): Promise<DashboardSummary> => {
+  const res = await fetch(`${API_BASE}/dashboard?timeframe=${encodeURIComponent(timeframe)}`);
   if (!res.ok) throw new Error('Failed to fetch dashboard data');
   return res.json();
 };

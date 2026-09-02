@@ -25,7 +25,7 @@ ML layer
   ├── ingestion
   ├── validation
   ├── feature construction
-  ├── modeling
+  ├── multi-model training sweep
   ├── threshold selection
   └── artifact export
 
@@ -34,6 +34,7 @@ Artifacts tracked by MLflow
   ├── risk_model.joblib
   ├── threshold.json
   ├── metadata.json
+  ├── model_leaderboard.json
   └── MLflow run metadata under mlruns/
 ```
 
@@ -56,7 +57,8 @@ Artifacts tracked by MLflow
 - `ml_pipeline/data_ingestion.py` loads the dataset
 - `ml_pipeline/data_validation.py` checks required fields and class balance
 - `ml_pipeline/features.py` builds the feature set and temporal split
-- `ml_pipeline/train.py` trains the baseline and boosted models
+- `ml_pipeline/model_zoo.py` defines the candidate estimators and evaluation helpers
+- `ml_pipeline/train.py` trains the ten-model sweep and selects the best production model
 - `ml_pipeline/artifacts.py` loads saved artifacts and runtime metadata
 - `ml_pipeline/predict.py` scores a transaction row and returns reasons
 
@@ -64,10 +66,10 @@ Artifacts tracked by MLflow
 
 The training pipeline produces:
 
-- a logistic regression baseline
-- a boosted tree model
+- ten tracked candidate models logged as nested MLflow runs
+- a selected production model bundle
 - a saved threshold
-- a model metadata file
+- a model metadata file with the leaderboard and selected run context
 
 The app reads the active metadata and stores the selected model as the runtime model in use.
 

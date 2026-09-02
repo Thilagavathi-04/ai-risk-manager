@@ -40,8 +40,8 @@ async def health() -> dict[str, str]:
 
 
 @router.get("/dashboard")
-async def dashboard_data() -> dict[str, object]:
-    summary = app_repository.dashboard.get_summary()
+async def dashboard_data(timeframe: str = "24h") -> dict[str, object]:
+    summary = app_repository.get_dashboard_summary(timeframe)
     return summary.model_dump()
 
 
@@ -53,7 +53,10 @@ async def list_transactions() -> list[dict[str, object]]:
 
 @router.get("/transactions/{transaction_id}")
 async def get_transaction(transaction_id: str) -> dict[str, object]:
-    detail = app_repository.get_transaction(transaction_id)
+    try:
+        detail = app_repository.get_transaction(transaction_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     return detail.model_dump()
 
 
@@ -65,19 +68,23 @@ async def list_reviews() -> list[dict[str, object]]:
 
 @router.post("/reviews/{transaction_id}")
 async def record_review(transaction_id: str, payload: ReviewOutcomePayload) -> dict[str, object]:
-    app_repository.record_review(transaction_id, payload.reviewer_outcome)
-    detail = app_repository.get_transaction(transaction_id)
+    try:
+        app_repository.record_review(transaction_id, payload.reviewer_outcome)
+        detail = app_repository.get_transaction(transaction_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     return detail.model_dump()
 
 
 @router.get("/evaluation")
 async def evaluation_data() -> dict[str, object]:
+    context = load_active_model_context()
     return {
         "metrics": [m.model_dump() for m in app_repository.evaluation_metrics()],
         "threshold_cost_points": [t.model_dump() for t in app_repository.threshold_cost_points()],
         "model_comparison": [mc.model_dump() for mc in app_repository.model_comparison()],
         "confusion_matrix": app_repository.confusion_matrix(),
-        "selected_threshold": "0.72",
+        "selected_threshold": str(context.get("selected_threshold", "")),
     }
 
 
@@ -89,22 +96,28 @@ async def audit_data() -> list[dict[str, object]]:
 
 @router.get("/settings")
 async def settings_data() -> dict[str, object]:
+    model_context = load_active_model_context()
     sections = app_repository.settings()
     return {
         "sections": [s.model_dump() for s in sections],
-        "model_context": load_active_model_context(),
+        "model_context": model_context,
+        "model_leaderboard": model_context.get("model_leaderboard", []),
     }
 
 
 @router.get("/metrics")
 async def metrics() -> dict[str, object]:
-    summary = app_repository.dashboard.get_summary()
+    # Report all-time transaction totals for the metrics endpoint rather than the
+    # default dashboard timeframe window.
+    transactions_total = len(app_repository.list_transactions())
+    summary = app_repository.get_dashboard_summary()
+    stats = {stat.label: stat.value for stat in summary.stats}
     return {
-        "transactions": 12482,
-        "high_risk": 183,
-        "review_queue": 64,
-        "precision": "91.2%",
-        "recall": "78.6%",
+        "transactions": int(transactions_total),
+        "high_risk": int(str(stats.get("High Risk", "0")).replace(",", "") or 0),
+        "review_queue": int(str(stats.get("Review Queue", "0")).replace(",", "") or 0),
+        "precision": stats.get("Precision", ""),
+        "recall": stats.get("Recall", ""),
         "stats": [stat.model_dump() for stat in summary.stats],
     }
 
@@ -179,32 +192,10 @@ async def validate_test_data_api(file: UploadFile) -> dict[str, object]:
                 sample_feats = candidates[feats]
                 probs = model.predict_proba(sample_feats)[:, 1]
 
-                for idx in range(min(10, len(candidates))):
-                    row = candidates.iloc[idx]
-                    prob = float(probs[idx])
-                    risk_lvl = "HIGH" if prob >= threshold else ("MEDIUM" if prob >= threshold * 0.5 else "LOW")
-                    rec_action = (
-                        "Manual Review"
-                        if risk_lvl == "HIGH"
-                        else ("Verification" if risk_lvl == "MEDIUM" else "Approve")
-                    )
-
-                    amt_raw = str(row.get("amount", "1000"))
-                    amt_val = float(amt_raw) if amt_raw.replace(".", "", 1).isdigit() else 1000.0
-                    merchant_id = str(row.get("nameDest", "M999"))
-                    if len(merchant_id) > 6:
-                        merchant_id = merchant_id[:6]
-
-                    app_repository.add_transaction(
-                        amount=amt_val,
-                        risk_score=prob,
-                        risk_level=risk_lvl,
-                        recommended_action=rec_action,
-                        category="transfer"
-                        if str(row.get("type", "")).upper() in ("TRANSFER", "CASH_OUT")
-                        else "general",
-                        merchant=merchant_id,
-                    )
+                # For sandbox CSV validation we surface example candidates and
+                # predicted probabilities but do not persist them as transactions
+                # in the main demo database. This keeps sandbox validation idempotent
+                # and avoids polluting the demo dataset used for metrics.
     except Exception:
         pass
 
@@ -226,16 +217,10 @@ async def test_model_api(payload: ModelTestPayload) -> dict[str, object]:
     df_payload = pd.DataFrame([payload.model_dump()])
     prediction = predict_row(model_path, threshold_path, df_payload)
     threshold = load_threshold(threshold_path)
-    tx_id = app_repository.add_transaction(
-        amount=payload.amount,
-        risk_score=float(prediction.risk_score),
-        risk_level=prediction.risk_level,
-        recommended_action=prediction.recommended_action,
-        category="transfer" if payload.type.upper() in ("TRANSFER", "CASH_OUT") else "general",
-    )
-
+    # For the sandbox model test route we return the prediction metadata but
+    # do not write the synthetic transaction record to the main demo database.
     return {
-        "transaction_id": tx_id,
+        "transaction_id": "",
         "risk_score": round(float(prediction.risk_score), 4),
         "risk_level": prediction.risk_level,
         "recommended_action": prediction.recommended_action,

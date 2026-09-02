@@ -3,6 +3,27 @@ export interface DashboardStat {
   value: string;
 }
 
+export interface TrendPoint {
+  label: string;
+  volume: number;
+  fraud: number;
+}
+
+export interface PaymentBreakdownItem {
+  type: string;
+  volume: string;
+  share: string;
+  fraudRate: string;
+  riskLevel: string;
+  percent: number;
+}
+
+export interface RiskDistributionItem {
+  label: string;
+  count: number;
+  percent: number;
+}
+
 export interface TransactionCard {
   id: string;
   amount: string;
@@ -15,6 +36,9 @@ export interface DashboardSummary {
   page_title: string;
   stats: DashboardStat[];
   recent_transactions: TransactionCard[];
+  hourly_trend: TrendPoint[];
+  payment_breakdown: PaymentBreakdownItem[];
+  risk_distribution: RiskDistributionItem[];
 }
 
 export interface TransactionListItem {
@@ -59,6 +83,7 @@ export interface ModelComparisonRow {
   f1: string;
   pr_auc: string;
   expected_cost: string;
+  is_selected?: boolean;
 }
 
 export interface EvaluationData {
@@ -92,6 +117,7 @@ export interface SettingsSection {
 export interface ModelContext {
   model_version: string;
   model_name: string;
+  model_family: string;
   run_name: string;
   run_id: string;
   experiment: string;
@@ -100,11 +126,37 @@ export interface ModelContext {
   status: string;
   user: string;
   training_summary: string;
+  selected_threshold: number;
+  selected_artifact_path: string;
+  model_leaderboard: ModelLeaderboardRow[];
+}
+
+export interface ModelLeaderboardRow {
+  model_name: string;
+  model_family: string;
+  mlflow_run_id: string;
+  mlflow_run_name: string;
+  threshold: number;
+  validation_precision: string;
+  validation_recall: string;
+  validation_f1: string;
+  validation_pr_auc: string;
+  validation_roc_auc: string;
+  validation_expected_cost: string;
+  test_precision: string;
+  test_recall: string;
+  test_f1: string;
+  test_pr_auc: string;
+  test_roc_auc: string;
+  test_expected_cost: string;
+  artifact_path: string;
+  is_selected: boolean;
 }
 
 export interface SettingsData {
   sections: SettingsSection[];
   model_context: ModelContext;
+  model_leaderboard: ModelLeaderboardRow[];
 }
 
 export interface CsvUploadSummary {

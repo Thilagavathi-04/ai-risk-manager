@@ -1,11 +1,12 @@
 import React from 'react';
 
 interface StatusBadgeProps {
-  status: string;
+  status?: string | null;
 }
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
-  const normalized = status.toUpperCase();
+  const label = (status ?? 'Unknown').toString();
+  const normalized = label.toUpperCase();
   let badgeClass = 'badge-closed';
 
   if (normalized === 'HIGH' || normalized === 'DECLINED') {
@@ -16,5 +17,9 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
     badgeClass = 'badge-low';
   }
 
-  return <span className={`badge ${badgeClass}`}>{status}</span>;
+  return (
+    <span className={`badge ${badgeClass}`} title={label} aria-label={`status-${normalized.toLowerCase()}`}>
+      {label}
+    </span>
+  );
 };

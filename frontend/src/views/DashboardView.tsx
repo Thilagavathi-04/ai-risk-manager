@@ -28,7 +28,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab }) =
   const [activeBarIndex, setActiveBarIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    fetchDashboard()
+    setLoading(true);
+    setError(null);
+    fetchDashboard(timeframe)
       .then((res) => {
         setData(res);
         setLoading(false);
@@ -37,7 +39,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab }) =
         setError(err.message);
         setLoading(false);
       });
-  }, []);
+  }, [timeframe]);
 
   if (loading) {
     return (
@@ -56,40 +58,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab }) =
     );
   }
 
-  // Sample Time Series Data for 24-hour Trend Chart
-  const hourlyTrendData = [
-    { hour: '00:00', volume: 380, fraud: 4 },
-    { hour: '02:00', volume: 290, fraud: 2 },
-    { hour: '04:00', volume: 180, fraud: 1 },
-    { hour: '06:00', volume: 420, fraud: 5 },
-    { hour: '08:00', volume: 850, fraud: 12 },
-    { hour: '10:00', volume: 1240, fraud: 18 },
-    { hour: '12:00', volume: 1420, fraud: 24 },
-    { hour: '14:00', volume: 1650, fraud: 31 },
-    { hour: '16:00', volume: 1580, fraud: 28 },
-    { hour: '18:00', volume: 1390, fraud: 22 },
-    { hour: '20:00', volume: 1120, fraud: 16 },
-    { hour: '22:00', volume: 740, fraud: 9 },
-  ];
+  const hourlyTrendData = data.hourly_trend;
+  const maxVolume = Math.max(1, ...hourlyTrendData.map((d) => d.volume));
+  const paymentBreakdown = data.payment_breakdown;
+  const riskDistribution = data.risk_distribution;
 
-  const maxVolume = Math.max(...hourlyTrendData.map((d) => d.volume));
-
-  // Payment Method Risk Breakdown
-  const paymentBreakdown = [
-    { type: 'TRANSFER', volume: '₹4.8M', share: '38%', fraudRate: '18.4%', riskLevel: 'HIGH', percent: 38, color: '#ef4444' },
-    { type: 'CASH_OUT', volume: '₹3.6M', share: '29%', fraudRate: '14.1%', riskLevel: 'HIGH', percent: 29, color: '#f97316' },
-    { type: 'PAYMENT', volume: '₹2.2M', share: '18%', fraudRate: '0.1%', riskLevel: 'LOW', percent: 18, color: '#3b82f6' },
-    { type: 'CASH_IN', volume: '₹1.1M', share: '9%', fraudRate: '0.0%', riskLevel: 'LOW', percent: 9, color: '#10b981' },
-    { type: 'DEBIT', volume: '₹700K', share: '6%', fraudRate: '0.0%', riskLevel: 'LOW', percent: 6, color: '#6366f1' },
-  ];
+  const statValues = new Map(data.stats.map((stat) => [stat.label, stat.value]));
 
   // KPI Stat Cards
   const statCards = [
-    { label: 'Total Volume', value: '₹12.4M', icon: Activity },
-    { label: 'Monitored Count', value: data.stats[0]?.value || '12,526', icon: ArrowUpRight },
-    { label: 'High Risk Flags', value: data.stats[1]?.value || '193', icon: AlertTriangle },
-    { label: 'Pending Reviews', value: data.stats[2]?.value || '76', icon: Clock },
-    { label: 'Model Precision', value: data.stats[3]?.value || '91.2%', icon: ShieldCheck },
+    { label: 'Transactions', value: statValues.get('Transactions') || '0', icon: ArrowUpRight },
+    { label: 'High Risk Flags', value: statValues.get('High Risk') || '0', icon: AlertTriangle },
+    { label: 'Pending Reviews', value: statValues.get('Review Queue') || '0', icon: Clock },
+    { label: 'Total Volume', value: statValues.get('Total Volume') || '₹0', icon: Activity },
+    { label: 'Model Precision', value: statValues.get('Precision') || '', icon: ShieldCheck },
   ];
 
   // Filtered Transactions Feed
@@ -168,7 +150,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab }) =
             </div>
           </div>
 
-          <div style={{ position: 'relative', width: '100%', height: '220px', paddingTop: '10px' }}>
+            <div style={{ position: 'relative', width: '100%', height: '220px', paddingTop: '10px' }}>
+            {hourlyTrendData.length === 0 ? (
+              <div style={{ height: '180px', display: 'grid', placeItems: 'center', color: 'var(--text-muted)' }}>
+                No transactions recorded for the selected timeframe.
+              </div>
+            ) : (
             <svg width="100%" height="180" viewBox="0 0 600 180" preserveAspectRatio="none" style={{ overflow: 'visible' }}>
               {/* Background Grid Lines */}
               {[0, 45, 90, 135, 180].map((y, i) => (
@@ -228,12 +215,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab }) =
                       fontSize="10"
                       fontWeight="600"
                     >
-                      {d.hour}
+                      {d.label}
                     </text>
                   </g>
                 );
               })}
             </svg>
+            )}
 
             {/* Hover Tooltip Box */}
             {activeBarIndex !== null && (
@@ -252,7 +240,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab }) =
                   pointerEvents: 'none',
                 }}
               >
-                <strong>Hour: {hourlyTrendData[activeBarIndex].hour}</strong>
+                <strong>Hour: {hourlyTrendData[activeBarIndex].label}</strong>
                 <div>Volume: {hourlyTrendData[activeBarIndex].volume} txs</div>
                 <div style={{ color: 'var(--danger-text)', fontWeight: '700' }}>
                   High Risk: {hourlyTrendData[activeBarIndex].fraud} flags
@@ -274,42 +262,28 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab }) =
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
             {/* SVG Donut Chart */}
             <div style={{ position: 'relative', width: '130px', height: '130px' }}>
+              {riskDistribution.length === 0 ? (
+                <div style={{ width: '130px', height: '130px', display: 'grid', placeItems: 'center', color: 'var(--text-muted)' }}>
+                  No data
+                </div>
+              ) : (
               <svg width="130" height="130" viewBox="0 0 42 42" className="donut">
                 <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="var(--panel-hover)" strokeWidth="5" />
-                {/* Low Risk Segment (Green) - 92% */}
-                <circle
-                  cx="21"
-                  cy="21"
-                  r="15.915"
-                  fill="transparent"
-                  stroke="var(--accent)"
-                  strokeWidth="5"
-                  strokeDasharray="92 8"
-                  strokeDashoffset="25"
-                />
-                {/* Medium Risk Segment (Yellow) - 6% */}
-                <circle
-                  cx="21"
-                  cy="21"
-                  r="15.915"
-                  fill="transparent"
-                  stroke="var(--warning)"
-                  strokeWidth="5"
-                  strokeDasharray="6 94"
-                  strokeDashoffset="-67"
-                />
-                {/* High Risk Segment (Red) - 2% */}
-                <circle
-                  cx="21"
-                  cy="21"
-                  r="15.915"
-                  fill="transparent"
-                  stroke="var(--danger)"
-                  strokeWidth="5"
-                  strokeDasharray="2 98"
-                  strokeDashoffset="-73"
-                />
+                {riskDistribution.map((segment, idx) => (
+                  <circle
+                    key={segment.label}
+                    cx="21"
+                    cy="21"
+                    r="15.915"
+                    fill="transparent"
+                    stroke={idx === 0 ? 'var(--accent)' : idx === 1 ? 'var(--warning)' : 'var(--danger)'}
+                    strokeWidth="5"
+                    strokeDasharray={`${segment.percent} ${100 - segment.percent}`}
+                    strokeDashoffset={idx === 0 ? '25' : idx === 1 ? '-67' : '-73'}
+                  />
+                ))}
               </svg>
+              )}
               <div
                 style={{
                   position: 'absolute',
@@ -319,8 +293,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab }) =
                   textAlign: 'center',
                 }}
               >
-                <strong style={{ fontSize: '1.2rem', color: 'var(--text-main)', display: 'block' }}>92.4%</strong>
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Low Risk</span>
+                <strong style={{ fontSize: '1.2rem', color: 'var(--text-main)', display: 'block' }}>
+                  {riskDistribution[0] ? `${riskDistribution[0].percent.toFixed(1)}%` : '0%'}
+                </strong>
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                  {riskDistribution[0] ? riskDistribution[0].label : 'Low Risk'}
+                </span>
               </div>
             </div>
 
@@ -330,19 +308,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab }) =
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent)' }} /> Low Risk
                 </span>
-                <strong style={{ color: 'var(--text-main)' }}>92.4% (11,574)</strong>
+                <strong style={{ color: 'var(--text-main)' }}>{riskDistribution[0] ? `${riskDistribution[0].percent.toFixed(1)}% (${riskDistribution[0].count.toLocaleString()})` : '0%'}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--warning)' }} /> Medium Risk
                 </span>
-                <strong style={{ color: 'var(--text-main)' }}>6.1% (759)</strong>
+                <strong style={{ color: 'var(--text-main)' }}>{riskDistribution[1] ? `${riskDistribution[1].percent.toFixed(1)}% (${riskDistribution[1].count.toLocaleString()})` : '0%'}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--danger)' }} /> High Risk
                 </span>
-                <strong style={{ color: 'var(--danger-text)' }}>1.5% (193)</strong>
+                <strong style={{ color: 'var(--danger-text)' }}>{riskDistribution[2] ? `${riskDistribution[2].percent.toFixed(1)}% (${riskDistribution[2].count.toLocaleString()})` : '0%'}</strong>
               </div>
             </div>
           </div>
@@ -361,7 +339,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab }) =
         </div>
 
         <div className="progress-list">
-          {paymentBreakdown.map((item, idx) => (
+          {paymentBreakdown.length === 0 ? (
+            <p style={{ color: 'var(--text-muted)' }}>No payment data recorded yet.</p>
+          ) : paymentBreakdown.map((item, idx) => (
             <div key={idx} className="progress-item">
               <div className="progress-label-row">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -381,7 +361,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab }) =
                   className="progress-fill"
                   style={{
                     width: `${item.percent}%`,
-                    backgroundColor: item.color,
+                    backgroundColor: item.riskLevel === 'HIGH' ? '#ef4444' : item.riskLevel === 'MEDIUM' ? '#f59e0b' : '#10b981',
                   }}
                 />
               </div>

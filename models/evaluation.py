@@ -24,3 +24,4 @@ class ModelComparisonRow(BaseModel):
     f1: str
     pr_auc: str
     expected_cost: str
+    is_selected: bool = False

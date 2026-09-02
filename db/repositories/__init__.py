@@ -1,4 +1,4 @@
-from db.repositories.app_repository import InMemoryAppRepository, app_repository
-from db.repositories.dashboard_repository import DashboardRepository, InMemoryDashboardRepository
+from db.repositories.app_repository import SQLiteAppRepository, app_repository
+from db.repositories.dashboard_repository import DashboardRepository
 
-__all__ = ["DashboardRepository", "InMemoryDashboardRepository", "InMemoryAppRepository", "app_repository"]
+__all__ = ["DashboardRepository", "SQLiteAppRepository", "app_repository"]

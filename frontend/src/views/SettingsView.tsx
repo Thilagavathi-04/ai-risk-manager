@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { CsvUploadSummary, ModelTestResult, SettingsData } from '../types';
 import { fetchSettings, testModelInput, uploadCsvTestData } from '../services/api';
 import { StatusBadge } from '../components/StatusBadge';
-import { Upload, Play, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Upload, Play, CheckCircle2, AlertTriangle, Trophy } from 'lucide-react';
 
 interface SettingsViewProps {
   initialSandbox?: boolean;
@@ -88,6 +88,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialSandbox = fal
   }
 
   const { model_context } = data;
+  const leaderboard = data.model_leaderboard ?? model_context.model_leaderboard ?? [];
 
   return (
     <div>
@@ -123,7 +124,75 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialSandbox = fal
 
         <div className="info-callout">
           <p style={{ color: 'var(--text-main)', fontSize: '0.88rem' }}>
-            <strong>Model Selection Rationale:</strong> Boosted Tree Classifier selected for superior PR-AUC performance and lower expected verification cost compared to the baseline model.
+            <strong>Model Selection Rationale:</strong> {model_context.model_name || 'Selected production model'} was promoted from the tracked MLflow sweep using the recorded validation and test metrics.
+          </p>
+        </div>
+      </section>
+
+      <section className="glass-panel">
+        <div className="page-head">
+          <div>
+            <h3>
+              <Trophy size={18} color="var(--accent)" style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+              Multi-Model Sweep Metadata
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginTop: '2px' }}>
+              Every candidate was trained on the same temporal split, tracked in MLflow, and ranked here by test performance.
+            </p>
+          </div>
+        </div>
+
+        <div className="stat-grid">
+          <div className="stat-card">
+            <strong>{model_context.model_name}</strong>
+            <span>Selected Production Model</span>
+          </div>
+          <div className="stat-card">
+            <strong>{model_context.model_family}</strong>
+            <span>Selected Family</span>
+          </div>
+          <div className="stat-card">
+            <strong>{model_context.selected_threshold}</strong>
+            <span>Selected Threshold</span>
+          </div>
+          <div className="stat-card">
+            <strong>{leaderboard.length}</strong>
+            <span>Tracked Candidates</span>
+          </div>
+        </div>
+
+        <div className="table-container" style={{ marginTop: '18px' }}>
+          <table>
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>MLflow Run</th>
+                <th>Validation PR-AUC</th>
+                <th>Test PR-AUC</th>
+                <th>Threshold</th>
+                <th>Test Cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leaderboard.map((row) => (
+                <tr key={row.mlflow_run_id} style={{ background: row.is_selected ? 'rgba(16, 185, 129, 0.1)' : 'transparent' }}>
+                  <td style={{ fontWeight: 700, color: row.is_selected ? 'var(--accent)' : 'var(--text-main)' }}>
+                    {row.model_name} {row.is_selected ? '(Selected)' : ''}
+                  </td>
+                  <td style={{ fontFamily: 'monospace', fontSize: '0.84rem' }}>{row.mlflow_run_id}</td>
+                  <td>{row.validation_pr_auc}</td>
+                  <td>{row.test_pr_auc}</td>
+                  <td>{row.threshold.toFixed(2)}</td>
+                  <td>{row.test_expected_cost}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="info-callout" style={{ marginTop: '18px' }}>
+          <p style={{ color: 'var(--text-main)', fontSize: '0.88rem' }}>
+            <strong>Production Artifact:</strong> {model_context.selected_artifact_path}
           </p>
         </div>
       </section>

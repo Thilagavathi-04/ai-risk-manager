@@ -181,12 +181,11 @@ def test_app_routes_and_health() -> None:
     assert metrics.json()["transactions"] == 12482
 
     dashboard = client.get("/")
-    assert dashboard.status_code == 200
-    assert "ai-risk-manager" in dashboard.text.lower()
+    assert dashboard.status_code == 404
 
     review_response = client.post(
-        "/reviews/TX1001",
-        data={"reviewer_outcome": "Confirm risky"},
+        "/api/v1/reviews/TX1001",
+        json={"reviewer_outcome": "Confirm risky"},
     )
     assert review_response.status_code == 200
-    assert "Confirm risky" in review_response.text
+    assert review_response.json()["review_status"] == "Confirm risky"

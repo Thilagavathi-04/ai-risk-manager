@@ -109,18 +109,13 @@ The project combines three decoupled layers:
 
 ## 🤖 Model Performance & Rationale
 
-The active production model is a **HistGradientBoostingClassifier** (`max_depth=6`, `learning_rate=0.08`, `max_iter=150`) trained on the 6.36M row PaySim dataset and evaluated on a held-out test set of **954,393 transactions**:
+The active production model is selected from a **ten-model MLflow sweep** over XGBoost, LightGBM, CatBoost, HistGradientBoosting, Random Forest, Extra Trees, Balanced Random Forest, Logistic Regression, MLP Neural Network, and Isolation Forest. Each model is trained on the same temporal split, tracked in MLflow, and compared on validation/test metrics before promotion to production.
 
-| Metric | Active Boosted Tree | Baseline Logistic Regression |
-| :--- | :--- | :--- |
-| **Precision** | **99.41%** | 2.50% |
-| **Recall** | **71.48%** | 92.51% |
-| **F1 Score** | **83.16%** | 4.87% |
-| **PR-AUC** | **86.07%** | 7.97% |
-| **ROC-AUC** | **96.78%** | 92.83% |
-| **Expected Review Cost** | **₹1,475** | ₹14,295 |
+The selected model for the current run is **LightGBM**.
 
-For complete model details and tuning rationale, see [`MODEL_DETAILS.md`](MODEL_DETAILS.md).
+For a more detailed breakdown of the sweep and runtime metadata, see [`MODEL_DETAILS.md`](MODEL_DETAILS.md) and the Settings screen in the app.
+
+The MLflow UI reads from the repo-root `mlruns/` store. If you start it from the frontend folder, use `uv run mlflow ui --backend-store-uri ../mlruns`.
 
 ---
 

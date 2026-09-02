@@ -33,7 +33,23 @@ Then browse:
 uv run python -m ml_pipeline
 ```
 
-This step trains the model and logs artifacts under `mlruns/` and saves the runtime model bundle in `artifacts/`.
+This step trains the ten-model sweep, logs metrics and artifacts under `mlruns/`, and saves the selected production model bundle in `artifacts/`.
+
+## Run the MLflow UI
+
+From the repository root:
+
+```bash
+uv run mlflow ui --backend-store-uri mlruns
+```
+
+If you start the UI from `frontend/`, point it back to the repo-root store:
+
+```bash
+uv run mlflow ui --backend-store-uri ../mlruns
+```
+
+The selected production run logs summary metrics on the parent run, while the per-model sweeps appear as nested runs.
 
 ## Run tests
 
